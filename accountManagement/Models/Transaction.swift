@@ -12,7 +12,7 @@ class Transaction {
     var installmentAmount: Double?
     var isInstallment: Bool
     var installmentPaymentDate: Date?
-    var paidInstallments: Int
+    var paidInstallments: Int? = 0
     
     init(amount: Double, date: Date = Date(), type: TransactionType, category: TransactionCategory? = nil, note: String? = nil, installmentCount: Int? = nil, installmentPaymentDate: Date? = nil) {
         self.amount = amount
@@ -36,8 +36,8 @@ class Transaction {
     }
     
     var remainingInstallments: Int {
-        guard let total = installmentCount else { return 0 }
-        return total - paidInstallments
+        guard let total = installmentCount, let paid = paidInstallments else { return 0 }
+        return total - paid
     }
 }
 

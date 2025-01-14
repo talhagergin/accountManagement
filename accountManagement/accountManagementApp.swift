@@ -13,10 +13,15 @@ struct AccountManagementApp: App {
     let container: ModelContainer
     
     init() {
+        let schema = Schema([
+            Transaction.self
+        ])
+        let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
+        
         do {
-            container = try ModelContainer(for: Transaction.self)
+            container = try ModelContainer(for: schema, configurations: [modelConfiguration])
         } catch {
-            fatalError("Failed to initialize ModelContainer")
+            fatalError("Failed to initialize ModelContainer: \(error)")
         }
     }
     

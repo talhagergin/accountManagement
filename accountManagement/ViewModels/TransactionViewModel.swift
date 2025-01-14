@@ -174,7 +174,7 @@ class TransactionViewModel {
         guard transaction.isInstallment,
               transaction.remainingInstallments > 0 else { return }
         
-        transaction.paidInstallments += 1
+        transaction.paidInstallments = (transaction.paidInstallments ?? 0) + 1
         
         do {
             try modelContext.save()

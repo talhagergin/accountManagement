@@ -67,7 +67,7 @@ struct ContentView: View {
                 // Transaction List
                 List {
                     ForEach(viewModel.transactions) { transaction in
-                        TransactionRow(transaction: transaction)
+                        TransactionRow(transaction: transaction, viewModel: viewModel)
                     }
                 }
             }
@@ -87,6 +87,9 @@ struct ContentView: View {
 
 struct TransactionRow: View {
     let transaction: Transaction
+    let viewModel: TransactionViewModel
+    @State private var showingInstallmentDetails = false
+    
     private let dateFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateStyle = .medium
@@ -95,58 +98,68 @@ struct TransactionRow: View {
     }()
     
     var body: some View {
-        HStack {
-            if transaction.type == .expense, let category = transaction.category {
-                Image(systemName: category.icon)
-                    .foregroundColor(.gray)
+        Button(action: {
+            if transaction.isInstallment {
+                showingInstallmentDetails = true
             }
-            
-            VStack(alignment: .leading, spacing: 4) {
-                HStack {
-                    Text(transaction.type == .income ? "Gelir" : "Gider")
-                        .font(.headline)
-                    if transaction.isInstallment {
-                        Text("(Taksitli)")
-                            .font(.subheadline)
-                            .foregroundColor(.blue)
+        }) {
+            HStack {
+                if transaction.type == .expense, let category = transaction.category {
+                    Image(systemName: category.icon)
+                        .foregroundColor(.gray)
+                }
+                
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack {
+                        Text(transaction.type == .income ? "Gelir" : "Gider")
+                            .font(.headline)
+                        if transaction.isInstallment {
+                            Text("(Taksitli)")
+                                .font(.subheadline)
+                                .foregroundColor(.blue)
+                        }
                     }
-                }
-                
-                if let note = transaction.note {
-                    Text(note)
-                        .font(.subheadline)
-                        .foregroundColor(.gray)
-                }
-                
-                HStack {
-                    Text(dateFormatter.string(from: transaction.date))
-                        .font(.caption)
-                        .foregroundColor(.gray)
                     
-                    if transaction.isInstallment, let count = transaction.installmentCount {
-                        Text("•")
+                    if let note = transaction.note {
+                        Text(note)
+                            .font(.subheadline)
                             .foregroundColor(.gray)
-                        Text("\(count) Taksit")
+                    }
+                    
+                    HStack {
+                        Text(dateFormatter.string(from: transaction.date))
                             .font(.caption)
-                            .foregroundColor(.blue)
+                            .foregroundColor(.gray)
+                        
+                        if transaction.isInstallment {
+                            Text("•")
+                                .foregroundColor(.gray)
+                            Text("\(transaction.remainingInstallments)/\(transaction.installmentCount ?? 0) Taksit")
+                                .font(.caption)
+                                .foregroundColor(.blue)
+                        }
+                    }
+                }
+                
+                Spacer()
+                
+                VStack(alignment: .trailing, spacing: 4) {
+                    Text("$\(String(format: "%.2f", transaction.isInstallment ? (transaction.installmentAmount ?? 0) : transaction.amount))")
+                        .font(.headline)
+                        .foregroundColor(transaction.type == .income ? .green : .red)
+                    
+                    if transaction.isInstallment, let paymentDate = transaction.installmentPaymentDate {
+                        Text("Ödeme: \(dateFormatter.string(from: paymentDate))")
+                            .font(.caption)
+                            .foregroundColor(.gray)
                     }
                 }
             }
-            
-            Spacer()
-            
-            VStack(alignment: .trailing, spacing: 4) {
-                Text("$\(String(format: "%.2f", transaction.isInstallment ? (transaction.installmentAmount ?? 0) : transaction.amount))")
-                    .font(.headline)
-                    .foregroundColor(transaction.type == .income ? .green : .red)
-                
-                if transaction.isInstallment, let paymentDate = transaction.installmentPaymentDate {
-                    Text("Ödeme: \(dateFormatter.string(from: paymentDate))")
-                        .font(.caption)
-                        .foregroundColor(.gray)
-                }
-            }
+            .padding(.vertical, 8)
         }
-        .padding(.vertical, 8)
+        .buttonStyle(PlainButtonStyle())
+        .sheet(isPresented: $showingInstallmentDetails) {
+            InstallmentDetailsView(transaction: transaction, viewModel: viewModel)
+        }
     }
 }
