@@ -9,12 +9,16 @@ struct AddExpenseView: View {
     @State private var note: String = ""
     @State private var isInstallment: Bool = false
     @State private var installmentCount: String = ""
+    @State private var selectedDate: Date = Date()
+    @State private var installmentPaymentDate: Date = Date()
     
     var body: some View {
         NavigationStack {
             Form {
                 TextField("Miktar", text: $amount)
                     .keyboardType(.decimalPad)
+                
+                //DatePicker("Tarih", selection: $selectedDate, displayedComponents: .date)
                 
                 Picker("Kategori", selection: $category) {
                     ForEach(TransactionCategory.allCases, id: \.self) { category in
@@ -30,6 +34,8 @@ struct AddExpenseView: View {
                 if isInstallment {
                     TextField("Taksit Sayısı", text: $installmentCount)
                         .keyboardType(.numberPad)
+                    
+                    DatePicker("Taksit Ödeme Tarihi", selection: $installmentPaymentDate, displayedComponents: .date)
                 }
                 
                 if isInstallment && !installmentCount.isEmpty {
@@ -44,19 +50,21 @@ struct AddExpenseView: View {
                     }
                 }
             }
-            .navigationTitle("Add Expense")
+            .navigationTitle("Gider Ekle")
             .navigationBarItems(
-                leading: Button("Cancel") {
+                leading: Button("İptal") {
                     dismiss()
                 },
-                trailing: Button("Add") {
+                trailing: Button("Ekle") {
                     if let amountDouble = Double(amount) {
                         viewModel.addTransaction(
                             amount: amountDouble,
+                            date: selectedDate,
                             type: .expense,
                             category: category,
                             note: note.isEmpty ? nil : note,
-                            installmentCount: isInstallment ? Int(installmentCount) : nil
+                            installmentCount: isInstallment ? Int(installmentCount) : nil,
+                            installmentPaymentDate: isInstallment ? installmentPaymentDate : nil
                         )
                         dismiss()
                     }

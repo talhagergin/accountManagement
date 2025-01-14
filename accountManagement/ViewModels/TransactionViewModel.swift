@@ -24,8 +24,17 @@ class TransactionViewModel {
         }
     }
     
-    func addTransaction(amount: Double, type: TransactionType, category: TransactionCategory? = nil, note: String?, installmentCount: Int? = nil) {
-        let transaction = Transaction(amount: amount, type: type, category: category, note: note, installmentCount: installmentCount)
+    func addTransaction(amount: Double, date: Date, type: TransactionType, category: TransactionCategory? = nil, note: String? = nil, installmentCount: Int? = nil, installmentPaymentDate: Date? = nil) {
+        let transaction = Transaction(
+            amount: amount,
+            date: date,
+            type: type,
+            category: category,
+            note: note,
+            installmentCount: installmentCount,
+            installmentPaymentDate: installmentPaymentDate
+        )
+        
         modelContext.insert(transaction)
         
         do {
@@ -144,5 +153,38 @@ class TransactionViewModel {
             .filter { $0.type == .expense && $0.isInstallment }
             .map { ($0.note ?? "Taksitli Ödeme", $0.installmentAmount ?? 0, $0.installmentCount ?? 0) }
             .sorted { $0.1 > $1.1 }
+    }
+    
+    func getInstallmentPaymentDate(for transaction: Transaction) -> Date? {
+        transaction.installmentPaymentDate
+    }
+    
+    func updateInstallmentPaymentDate(for transaction: Transaction, newDate: Date) {
+        transaction.installmentPaymentDate = newDate
+        
+        do {
+            try modelContext.save()
+            fetchTransactions()
+        } catch {
+            print("Failed to update installment payment date: \(error)")
+        }
+    }
+    
+    func payInstallment(for transaction: Transaction) {
+        guard transaction.isInstallment,
+              transaction.remainingInstallments > 0 else { return }
+        
+        transaction.paidInstallments += 1
+        
+        do {
+            try modelContext.save()
+            fetchTransactions()
+        } catch {
+            print("Failed to update paid installments: \(error)")
+        }
+    }
+    
+    func getRemainingInstallments(for transaction: Transaction) -> Int {
+        transaction.remainingInstallments
     }
 }

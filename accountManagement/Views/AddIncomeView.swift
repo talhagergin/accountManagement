@@ -6,12 +6,15 @@ struct AddIncomeView: View {
     
     @State private var amount: String = ""
     @State private var note: String = ""
+    @State private var selectedDate: Date = Date()
     
     var body: some View {
         NavigationStack {
             Form {
                 TextField("Miktar", text: $amount)
                     .keyboardType(.decimalPad)
+                
+                DatePicker("Tarih", selection: $selectedDate, displayedComponents: .date)
                 
                 TextField("Açıklama", text: $note)
             }
@@ -24,6 +27,7 @@ struct AddIncomeView: View {
                     if let amountDouble = Double(amount) {
                         viewModel.addTransaction(
                             amount: amountDouble,
+                            date: selectedDate,
                             type: .income,
                             note: note.isEmpty ? nil : note
                         )

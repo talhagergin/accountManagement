@@ -11,8 +11,10 @@ class Transaction {
     var installmentCount: Int?
     var installmentAmount: Double?
     var isInstallment: Bool
+    var installmentPaymentDate: Date?
+    var paidInstallments: Int
     
-    init(amount: Double, date: Date = Date(), type: TransactionType, category: TransactionCategory? = nil, note: String? = nil, installmentCount: Int? = nil) {
+    init(amount: Double, date: Date = Date(), type: TransactionType, category: TransactionCategory? = nil, note: String? = nil, installmentCount: Int? = nil, installmentPaymentDate: Date? = nil) {
         self.amount = amount
         self.date = date
         self.type = type
@@ -20,6 +22,8 @@ class Transaction {
         self.note = note
         self.isInstallment = installmentCount != nil
         self.installmentCount = installmentCount
+        self.installmentPaymentDate = installmentPaymentDate
+        self.paidInstallments = 0
         if let count = installmentCount {
             self.installmentAmount = amount / Double(count)
         } else {
@@ -29,6 +33,11 @@ class Transaction {
     
     convenience init() {
         self.init(amount: 0, type: .expense)
+    }
+    
+    var remainingInstallments: Int {
+        guard let total = installmentCount else { return 0 }
+        return total - paidInstallments
     }
 }
 

@@ -87,6 +87,12 @@ struct ContentView: View {
 
 struct TransactionRow: View {
     let transaction: Transaction
+    private let dateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
+        formatter.timeStyle = .none
+        return formatter
+    }()
     
     var body: some View {
         HStack {
@@ -95,25 +101,52 @@ struct TransactionRow: View {
                     .foregroundColor(.gray)
             }
             
-            VStack(alignment: .leading) {
-                Text(transaction.type == .income ? "Income" : "Expense")
-                    .font(.headline)
+            VStack(alignment: .leading, spacing: 4) {
+                HStack {
+                    Text(transaction.type == .income ? "Gelir" : "Gider")
+                        .font(.headline)
+                    if transaction.isInstallment {
+                        Text("(Taksitli)")
+                            .font(.subheadline)
+                            .foregroundColor(.blue)
+                    }
+                }
+                
                 if let note = transaction.note {
                     Text(note)
                         .font(.subheadline)
                         .foregroundColor(.gray)
                 }
-                if transaction.type == .expense, let category = transaction.category {
-                    Text(category.rawValue)
+                
+                HStack {
+                    Text(dateFormatter.string(from: transaction.date))
                         .font(.caption)
                         .foregroundColor(.gray)
+                    
+                    if transaction.isInstallment, let count = transaction.installmentCount {
+                        Text("•")
+                            .foregroundColor(.gray)
+                        Text("\(count) Taksit")
+                            .font(.caption)
+                            .foregroundColor(.blue)
+                    }
                 }
             }
             
             Spacer()
             
-            Text("$\(String(format: "%.2f", transaction.amount))")
-                .foregroundColor(transaction.type == .income ? .green : .red)
+            VStack(alignment: .trailing, spacing: 4) {
+                Text("$\(String(format: "%.2f", transaction.isInstallment ? (transaction.installmentAmount ?? 0) : transaction.amount))")
+                    .font(.headline)
+                    .foregroundColor(transaction.type == .income ? .green : .red)
+                
+                if transaction.isInstallment, let paymentDate = transaction.installmentPaymentDate {
+                    Text("Ödeme: \(dateFormatter.string(from: paymentDate))")
+                        .font(.caption)
+                        .foregroundColor(.gray)
+                }
+            }
         }
+        .padding(.vertical, 8)
     }
 }
