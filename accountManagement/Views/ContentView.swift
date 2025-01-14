@@ -6,6 +6,7 @@ struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
     @State private var showingAddIncome = false
     @State private var showingAddExpense = false
+    @State private var showingAnalytics = false
     @State private var selectedTransaction: Transaction?
     @State var viewModel: TransactionViewModel
     
@@ -53,6 +54,40 @@ struct ContentView: View {
                     .padding(.horizontal)
                 }
                 
+                // Action Buttons
+                HStack(spacing: 20) {
+                    Button(action: { showingAddIncome = true }) {
+                        VStack {
+                            Image(systemName: "plus.circle.fill")
+                                .font(.system(size: 24))
+                                .foregroundColor(.green)
+                            Text("Gelir Ekle")
+                                .font(.caption)
+                        }
+                    }
+                    
+                    Button(action: { showingAddExpense = true }) {
+                        VStack {
+                            Image(systemName: "minus.circle.fill")
+                                .font(.system(size: 24))
+                                .foregroundColor(.red)
+                            Text("Gider Ekle")
+                                .font(.caption)
+                        }
+                    }
+                    
+                    Button(action: { showingAnalytics = true }) {
+                        VStack {
+                            Image(systemName: "chart.bar.fill")
+                                .font(.system(size: 24))
+                                .foregroundColor(.blue)
+                            Text("Analiz")
+                                .font(.caption)
+                        }
+                    }
+                }
+                .padding(.vertical)
+                
                 // Chart
                 let monthTransactions = viewModel.getTransactionsForSelectedMonth()
                 if !monthTransactions.isEmpty {
@@ -87,6 +122,7 @@ struct ContentView: View {
             }
             .padding(.top)
             .navigationTitle("Hesap Yönetimi")
+            /*
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Menu {
@@ -100,12 +136,15 @@ struct ContentView: View {
                         Image(systemName: "plus")
                     }
                 }
-            }
+            }*/
             .sheet(isPresented: $showingAddIncome) {
                 AddIncomeView(viewModel: viewModel)
             }
             .sheet(isPresented: $showingAddExpense) {
                 AddExpenseView(viewModel: viewModel)
+            }
+            .sheet(isPresented: $showingAnalytics) {
+                TransactionAnalyticsView(viewModel: viewModel)
             }
             .sheet(item: $selectedTransaction) { transaction in
                 InstallmentDetailsView(transaction: transaction, viewModel: viewModel)
