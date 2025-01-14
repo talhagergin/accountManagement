@@ -1,24 +1,71 @@
 import Foundation
 import SwiftData
+import UserNotifications
 
 @Observable
-class TransactionViewModel {
-    private var modelContext: ModelContext
-    
+class TransactionViewModel: ObservableObject {
+    private let modelContext: ModelContext
     var transactions: [Transaction] = []
-    var totalBalance: Double = 0.0
+    var selectedMonth: Date = Date()
+    private var _totalBalance: Double = 0 // Stored property for the total balance
+
+    
+    private let monthFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "MMMM yyyy"
+        return formatter
+    }()
+    
+    var totalBalance: Double {
+        _totalBalance
+    }
     
     init(modelContext: ModelContext) {
         self.modelContext = modelContext
-        fetchTransactions()
+        fetchData()
+        setupNotifications()
     }
+    
+    // MARK: - Month-based Functions
+    
+    func getAvailableMonths() -> [Date] {
+        let calendar = Calendar.current
+        let sortedTransactions = transactions.sorted { $0.date > $1.date }
+        
+        var months: Set<Date> = []
+        
+        for transaction in sortedTransactions {
+            if let startOfMonth = calendar.date(from: calendar.dateComponents([.year, .month], from: transaction.date)) {
+                months.insert(startOfMonth)
+            }
+        }
+        
+        return Array(months).sorted(by: >)
+    }
+    
+    func getTransactionsForSelectedMonth() -> [Transaction] {
+        let calendar = Calendar.current
+        return transactions.filter { transaction in
+            calendar.isDate(transaction.date, equalTo: selectedMonth, toGranularity: .month)
+        }
+    }
+    
+    func monthString(for date: Date) -> String {
+        monthFormatter.string(from: date)
+    }
+    
+    func selectMonth(_ date: Date) {
+        selectedMonth = date
+    }
+    
+    // MARK: - Existing Functions
     
     func fetchTransactions() {
         let descriptor = FetchDescriptor<Transaction>(sortBy: [SortDescriptor(\.date, order: .reverse)])
         
         do {
             transactions = try modelContext.fetch(descriptor)
-            calculateTotalBalance()
+             calculateTotalBalance()
         } catch {
             print("Fetch failed: \(error)")
         }
@@ -40,13 +87,15 @@ class TransactionViewModel {
         do {
             try modelContext.save()
             fetchTransactions()
+             calculateTotalBalance()
         } catch {
             print("Failed to save transaction: \(error)")
         }
     }
     
     private func calculateTotalBalance() {
-        totalBalance = transactions.reduce(0) { partialResult, transaction in
+       let monthTransactions = getTransactionsForSelectedMonth()
+        _totalBalance =  monthTransactions.reduce(0) { partialResult, transaction in
             let amount = transaction.isInstallment ? (transaction.installmentAmount ?? 0) : transaction.amount
             switch transaction.type {
             case .income:
@@ -186,5 +235,13 @@ class TransactionViewModel {
     
     func getRemainingInstallments(for transaction: Transaction) -> Int {
         transaction.remainingInstallments
+    }
+    
+    private func fetchData() {
+        // Fetch data from modelContext
+    }
+    
+    private func setupNotifications() {
+        // Setup notifications
     }
 }
