@@ -26,7 +26,7 @@ struct ContentView: View {
                         .rotationEffect(.degrees(-90))
                     
                     VStack {
-                        Text("Total Balance")
+                        Text("Toplam Para")
                             .font(.headline)
                         Text("$\(String(format: "%.2f", viewModel.totalBalance))")
                             .font(.title)
@@ -42,7 +42,7 @@ struct ContentView: View {
                         VStack {
                             Image(systemName: "plus.circle.fill")
                                 .foregroundColor(.green)
-                            Text("Add Income")
+                            Text("Gelir Ekle")
                         }
                     }
                     
@@ -50,7 +50,7 @@ struct ContentView: View {
                         VStack {
                             Image(systemName: "minus.circle.fill")
                                 .foregroundColor(.red)
-                            Text("Add Expense")
+                            Text("Gider Ekle")
                         }
                     }
                     
@@ -58,7 +58,7 @@ struct ContentView: View {
                         VStack {
                             Image(systemName: "chart.bar.fill")
                                 .foregroundColor(.blue)
-                            Text("Analytics")
+                            Text("Analiz")
                         }
                     }
                 }
@@ -71,7 +71,7 @@ struct ContentView: View {
                     }
                 }
             }
-            .navigationTitle("Account Management")
+            .navigationTitle("Hesap Yönetimi")
         }
         .sheet(isPresented: $showingAddIncome) {
             AddIncomeView(viewModel: viewModel)

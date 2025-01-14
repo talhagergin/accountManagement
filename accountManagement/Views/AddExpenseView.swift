@@ -13,29 +13,29 @@ struct AddExpenseView: View {
     var body: some View {
         NavigationStack {
             Form {
-                TextField("Amount", text: $amount)
+                TextField("Miktar", text: $amount)
                     .keyboardType(.decimalPad)
                 
-                Picker("Category", selection: $category) {
+                Picker("Kategori", selection: $category) {
                     ForEach(TransactionCategory.allCases, id: \.self) { category in
                         Label(category.rawValue, systemImage: category.icon)
                             .tag(category)
                     }
                 }
                 
-                TextField("Note", text: $note)
+                TextField("Açıklama", text: $note)
                 
-                Toggle("Installment", isOn: $isInstallment)
+                Toggle("Taksitli", isOn: $isInstallment)
                 
                 if isInstallment {
-                    TextField("Installment Count", text: $installmentCount)
+                    TextField("Taksit Sayısı", text: $installmentCount)
                         .keyboardType(.numberPad)
                 }
                 
                 if isInstallment && !installmentCount.isEmpty {
                     if let amountDouble = Double(amount), let count = Int(installmentCount) {
                         VStack(alignment: .leading) {
-                            Text("Monthly Installment Amount:")
+                            Text("Aylık Taksit Miktarı:")
                                 .font(.subheadline)
                                 .foregroundColor(.gray)
                             Text("$\(String(format: "%.2f", amountDouble / Double(count)))")

@@ -10,17 +10,17 @@ struct AddIncomeView: View {
     var body: some View {
         NavigationStack {
             Form {
-                TextField("Amount", text: $amount)
+                TextField("Miktar", text: $amount)
                     .keyboardType(.decimalPad)
                 
-                TextField("Note", text: $note)
+                TextField("Açıklama", text: $note)
             }
-            .navigationTitle("Add Income")
+            .navigationTitle("Gelir Ekle")
             .navigationBarItems(
-                leading: Button("Cancel") {
+                leading: Button("İptal") {
                     dismiss()
                 },
-                trailing: Button("Add") {
+                trailing: Button("Ekle") {
                     if let amountDouble = Double(amount) {
                         viewModel.addTransaction(
                             amount: amountDouble,
