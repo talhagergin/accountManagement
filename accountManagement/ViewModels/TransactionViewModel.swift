@@ -26,7 +26,7 @@ class TransactionViewModel: ObservableObject {
     init(modelContext: ModelContext) {
         self.modelContext = modelContext
         fetchTransactions()
-        setupNotifications()
+        setupNotifications() // Bildirimleri ayarla
     }
 
     // MARK: - Month-based Functions
@@ -92,6 +92,7 @@ class TransactionViewModel: ObservableObject {
         do {
             try modelContext.save()
             fetchTransactions() // Verileri yeniden yükle
+            updateDailyNotificationContent() // Bildirimi güncelle
         } catch {
             print("Failed to save transaction: \(error)")
         }
@@ -232,7 +233,71 @@ class TransactionViewModel: ObservableObject {
         // Fetch data from modelContext
     }
 
+    // MARK: - Notifications
+
     private func setupNotifications() {
-        // Setup notifications
+        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound]) { granted, error in
+            if granted {
+                self.scheduleDailyNotification()
+            }
+        }
+    }
+
+    private func scheduleDailyNotification() {
+        let content = UNMutableNotificationContent()
+        content.title = "Günlük İşlem Özeti"
+
+        // Trigger'ı her gün akşam 21:00 için ayarla
+        var dateComponents = DateComponents()
+        dateComponents.hour = 21
+        dateComponents.minute = 0
+
+        let trigger = UNCalendarNotificationTrigger(dateMatching: dateComponents, repeats: true)
+
+        // Notification request
+        let request = UNNotificationRequest(
+            identifier: "dailyTransactionSummary",
+            content: content,
+            trigger: trigger
+        )
+
+        // Mevcut bildirimi kaldır ve yenisini ekle
+        UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: ["dailyTransactionSummary"])
+        UNUserNotificationCenter.current().add(request) { error in
+            if let error = error {
+                print("Bildirim planlanırken hata oluştu: \(error)")
+            }
+        }
+    }
+
+    private func updateDailyNotificationContent() {
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: Date())
+        let todayTransactions = transactions.filter { calendar.isDate($0.date, inSameDayAs: today) }
+
+        let dailyIncome = todayTransactions
+            .filter { $0.type == .income }
+            .reduce(0) { $0 + ($1.isInstallment ? ($1.installmentAmount ?? 0) : $1.amount) }
+
+        let dailyExpense = todayTransactions
+            .filter { $0.type == .expense }
+            .reduce(0) { $0 + ($1.isInstallment ? ($1.installmentAmount ?? 0) : $1.amount) }
+
+        let content = UNMutableNotificationContent()
+        content.title = "Günlük İşlem Özeti"
+        content.body = """
+            Günlük Gelir: $\(String(format: "%.2f", dailyIncome))
+            Günlük Gider: $\(String(format: "%.2f", dailyExpense))
+            Net: $\(String(format: "%.2f", dailyIncome - dailyExpense))
+            """
+        content.sound = .default
+
+        let request = UNNotificationRequest(
+            identifier: "dailyTransactionSummary",
+            content: content,
+            trigger: nil
+        )
+
+        UNUserNotificationCenter.current().add(request)
     }
 }

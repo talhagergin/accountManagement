@@ -8,7 +8,11 @@ struct ContentView: View {
     @State private var showingAddExpense = false
     @State private var showingAnalytics = false
     @State private var selectedTransaction: Transaction?
+    @State private var isChartExpanded = false
     @State var viewModel: TransactionViewModel
+    
+    private let themeColor = Color(red: 255/255, green: 182/255, blue: 193/255) // Light pink
+    private let darkThemeColor = Color(red: 219/255, green: 112/255, blue: 147/255) // Darker pink
     
     var body: some View {
         NavigationStack {
@@ -24,7 +28,7 @@ struct ContentView: View {
                 }
                 .padding()
                 .frame(maxWidth: .infinity)
-                .background(Color.gray.opacity(0.1))
+                .background(themeColor.opacity(0.3))
                 .cornerRadius(12)
                 
                 // Month Selector
@@ -39,8 +43,8 @@ struct ContentView: View {
                                     .padding(.vertical, 8)
                                     .background(
                                         Calendar.current.isDate(month, equalTo: viewModel.selectedMonth, toGranularity: .month)
-                                        ? Color.blue
-                                        : Color.gray.opacity(0.2)
+                                        ? darkThemeColor
+                                        : themeColor.opacity(0.3)
                                     )
                                     .foregroundColor(
                                         Calendar.current.isDate(month, equalTo: viewModel.selectedMonth, toGranularity: .month)
@@ -80,7 +84,7 @@ struct ContentView: View {
                         VStack {
                             Image(systemName: "chart.bar.fill")
                                 .font(.system(size: 24))
-                                .foregroundColor(.blue)
+                                .foregroundColor(darkThemeColor)
                             Text("Analiz")
                                 .font(.caption)
                         }
@@ -88,55 +92,63 @@ struct ContentView: View {
                 }
                 .padding(.vertical)
                 
-                // Chart
-                let monthTransactions = viewModel.getTransactionsForSelectedMonth()
-                if !monthTransactions.isEmpty {
-                    Chart {
-                        ForEach(monthTransactions) { transaction in
-                            BarMark(
-                                x: .value("Date", transaction.date, unit: .day),
-                                y: .value("Amount", transaction.type == .income ? transaction.amount : -transaction.amount)
-                            )
-                            .foregroundStyle(transaction.type == .income ? Color.green : Color.red)
+                // Chart Section
+                VStack {
+                    Button(action: {
+                        withAnimation {
+                            isChartExpanded.toggle()
+                        }
+                    }) {
+                        HStack {
+                            Text("Grafik")
+                                .font(.headline)
+                            Spacer()
+                            Image(systemName: isChartExpanded ? "chevron.up" : "chevron.down")
+                        }
+                        .padding()
+                        .background(themeColor.opacity(0.3))
+                        .cornerRadius(8)
+                    }
+                    
+                    if isChartExpanded {
+                        let monthTransactions = viewModel.getTransactionsForSelectedMonth()
+                        if !monthTransactions.isEmpty {
+                            Chart {
+                                ForEach(monthTransactions) { transaction in
+                                    BarMark(
+                                        x: .value("Date", transaction.date, unit: .day),
+                                        y: .value("Amount", transaction.type == .income ? transaction.amount : -transaction.amount)
+                                    )
+                                    .foregroundStyle(transaction.type == .income ? Color.green : Color.red)
+                                }
+                            }
+                            .frame(height: 200)
+                            .padding()
+                        } else {
+                            Text("Bu ay için işlem bulunmamaktadır")
+                                .foregroundColor(.gray)
+                                .padding()
                         }
                     }
-                    .frame(height: 200)
-                    .padding()
-                } else {
-                    Text("Bu ay için işlem bulunmamaktadır")
-                        .foregroundColor(.gray)
-                        .padding()
                 }
                 
                 // Transactions List
                 List {
-                    ForEach(monthTransactions) { transaction in
+                    ForEach(viewModel.getTransactionsForSelectedMonth()) { transaction in
                         TransactionRow(transaction: transaction)
                             .onTapGesture {
                                 if transaction.isInstallment {
                                     selectedTransaction = transaction
                                 }
                             }
+                            .listRowBackground(themeColor.opacity(0.1))
                     }
                 }
+                .scrollContentBackground(.hidden)
             }
             .padding(.top)
             .navigationTitle("Hesap Yönetimi")
-            /*
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Menu {
-                        Button(action: { showingAddIncome = true }) {
-                            Label("Gelir Ekle", systemImage: "plus.circle.fill")
-                        }
-                        Button(action: { showingAddExpense = true }) {
-                            Label("Gider Ekle", systemImage: "minus.circle.fill")
-                        }
-                    } label: {
-                        Image(systemName: "plus")
-                    }
-                }
-            }*/
+            .background(Color(UIColor.systemBackground))
             .sheet(isPresented: $showingAddIncome) {
                 AddIncomeView(viewModel: viewModel)
             }
@@ -162,7 +174,7 @@ struct TransactionRow: View {
                 HStack {
                     if let category = transaction.category {
                         Image(systemName: category.icon)
-                            .foregroundColor(.blue)
+                            .foregroundColor(Color(red: 219/255, green: 112/255, blue: 147/255))
                     }
                     
                     if transaction.isInstallment {
