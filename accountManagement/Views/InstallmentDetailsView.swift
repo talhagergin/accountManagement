@@ -53,26 +53,31 @@ struct InstallmentDetailsView: View {
                     .cornerRadius(10)
                 }
                 
-                // Remaining Installments
-                if transaction.remainingInstallments > 0 {
-                    Text("Kalan Taksitler")
-                        .font(.headline)
-                    
-                    ForEach(0..<transaction.remainingInstallments, id: \.self) { index in
-                        HStack {
-                            Image(systemName: "circle")
-                                .foregroundColor(.blue)
-                            
-                            VStack(alignment: .leading) {
-                                Text("\(index + 1). Taksit")
-                                    .font(.subheadline)
-                                Text("$\(String(format: "%.2f", transaction.installmentAmount ?? 0))")
-                                    .font(.caption)
-                                    .foregroundColor(.gray)
-                            }
-                            
-                            Spacer()
-                            
+                // All Installments
+                Text("Taksitler")
+                    .font(.headline)
+                
+                ForEach(0..<(transaction.installmentCount ?? 0), id: \.self) { index in
+                    let isPaid = index < (transaction.paidInstallments ?? 0)
+                    HStack {
+                        Image(systemName: isPaid ? "checkmark.circle.fill" : "circle")
+                            .foregroundColor(isPaid ? .green : .blue)
+                        
+                        VStack(alignment: .leading) {
+                            Text("\(index + 1). Taksit")
+                                .font(.subheadline)
+                            Text("$\(String(format: "%.2f", transaction.installmentAmount ?? 0))")
+                                .font(.caption)
+                                .foregroundColor(.gray)
+                        }
+                        
+                        Spacer()
+                        
+                        if isPaid {
+                            Text("Ödendi")
+                                .foregroundColor(.green)
+                                .font(.caption)
+                        } else {
                             Button(action: {
                                 viewModel.payInstallment(for: transaction)
                             }) {
@@ -84,17 +89,12 @@ struct InstallmentDetailsView: View {
                                     .cornerRadius(8)
                             }
                         }
-                        .padding(.vertical, 8)
-                        .padding(.horizontal)
-                        .background(Color.gray.opacity(0.1))
-                        .cornerRadius(10)
                     }
-                } else {
-                    Text("Tüm taksitler ödenmiş!")
-                        .font(.headline)
-                        .foregroundColor(.green)
-                        .frame(maxWidth: .infinity, alignment: .center)
-                        .padding()
+                    .padding(.vertical, 8)
+                    .padding(.horizontal)
+                    .background(Color.gray.opacity(0.1))
+                    .cornerRadius(10)
+                    .opacity(isPaid ? 0.7 : 1)
                 }
                 
                 Spacer()

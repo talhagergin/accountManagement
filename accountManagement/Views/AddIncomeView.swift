@@ -8,6 +8,11 @@ struct AddIncomeView: View {
     @State private var note: String = ""
     @State private var selectedDate: Date = Date()
     
+    private var isValidAmount: Bool {
+        guard let amountDouble = Double(amount) else { return false }
+        return amountDouble > 0
+    }
+    
     var body: some View {
         NavigationStack {
             Form {
@@ -24,7 +29,7 @@ struct AddIncomeView: View {
                     dismiss()
                 },
                 trailing: Button("Ekle") {
-                    if let amountDouble = Double(amount) {
+                    if let amountDouble = Double(amount), amountDouble > 0 {
                         viewModel.addTransaction(
                             amount: amountDouble,
                             date: selectedDate,
@@ -34,6 +39,7 @@ struct AddIncomeView: View {
                         dismiss()
                     }
                 }
+                .disabled(!isValidAmount)
             )
         }
     }
