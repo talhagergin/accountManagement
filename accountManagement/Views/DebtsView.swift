@@ -4,22 +4,50 @@ struct DebtsView: View {
     @StateObject private var debtViewModel = DebtViewModel()
     @StateObject private var personViewModel = PersonViewModel()
     @State private var showingAddDebt = false
-    @State private var selectedPerson: Person?
+    @State private var showingAddPerson = false
+    @State private var newPersonName = ""
+    
+    var totalActiveDebts: Double {
+        personViewModel.people.reduce(0) { sum, person in
+            sum + debtViewModel.getTotalDebtForPerson(personId: person.id)
+        }
+    }
     
     var body: some View {
         NavigationView {
-            List {
-                ForEach(personViewModel.people) { person in
-                    let totalDebt = debtViewModel.getTotalDebtForPerson(personId: person.id)
-                    if totalDebt > 0 {
+            VStack {
+                // Toplam borç kartı
+                VStack {
+                    Text("Toplam Borç")
+                        .font(.headline)
+                        .foregroundColor(.gray)
+                    Text("\(totalActiveDebts, specifier: "%.2f") TL")
+                        .font(.system(size: 34, weight: .bold))
+                        .foregroundColor(.red)
+                }
+                .padding()
+                .frame(maxWidth: .infinity)
+                .background(Color.red.opacity(0.1))
+                .cornerRadius(12)
+                .padding()
+                
+                List {
+                    ForEach(personViewModel.people) { person in
+                        let totalDebt = debtViewModel.getTotalDebtForPerson(personId: person.id)
                         NavigationLink(destination: PersonDebtsView(person: person, debtViewModel: debtViewModel, personViewModel: personViewModel)) {
                             HStack {
                                 VStack(alignment: .leading) {
                                     Text(person.name)
                                         .font(.headline)
-                                    Text("Toplam Borç: \(totalDebt, specifier: "%.2f") TL")
-                                        .font(.subheadline)
-                                        .foregroundColor(.gray)
+                                    if totalDebt > 0 {
+                                        Text("Toplam Borç: \(totalDebt, specifier: "%.2f") TL")
+                                            .font(.subheadline)
+                                            .foregroundColor(.red)
+                                    } else {
+                                        Text("Borç Yok")
+                                            .font(.subheadline)
+                                            .foregroundColor(.green)
+                                    }
                                 }
                             }
                         }
@@ -27,13 +55,44 @@ struct DebtsView: View {
                 }
             }
             .navigationTitle("Borçlar")
-            .navigationBarItems(trailing: Button(action: {
-                showingAddDebt = true
-            }) {
-                Image(systemName: "plus")
-            })
+            .navigationBarItems(
+                leading: Button(action: {
+                    showingAddPerson = true
+                }) {
+                    Image(systemName: "person.badge.plus")
+                },
+                trailing: Button(action: {
+                    showingAddDebt = true
+                }) {
+                    Image(systemName: "plus")
+                }
+            )
             .sheet(isPresented: $showingAddDebt) {
                 AddDebtView(debtViewModel: debtViewModel, personViewModel: personViewModel)
+            }
+            .sheet(isPresented: $showingAddPerson) {
+                NavigationView {
+                    Form {
+                        Section(header: Text("Yeni Kişi")) {
+                            TextField("Kişi Adı", text: $newPersonName)
+                        }
+                    }
+                    .navigationTitle("Kişi Ekle")
+                    .navigationBarItems(
+                        leading: Button("İptal") {
+                            showingAddPerson = false
+                            newPersonName = ""
+                        },
+                        trailing: Button("Ekle") {
+                            if !newPersonName.isEmpty {
+                                personViewModel.addPerson(name: newPersonName)
+                                newPersonName = ""
+                                showingAddPerson = false
+                            }
+                        }
+                        .disabled(newPersonName.isEmpty)
+                    )
+                }
             }
         }
     }
