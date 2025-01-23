@@ -1,4 +1,3 @@
-import Foundation
 import SwiftUI
 
 struct AddSubscriptionView: View {
@@ -8,16 +7,23 @@ struct AddSubscriptionView: View {
     @State private var name: String = ""
     @State private var monthlyCost: String = ""
     @State private var startDate: Date = Date()
-    @State private var nextPaymentDate: Date = Date()
+    @State private var selectedFrequency: PaymentFrequency = .monthly
 
     var body: some View {
         NavigationView {
             Form {
-                TextField("Subscription Name", text: $name)
-                TextField("Monthly Cost", text: $monthlyCost)
-                    .keyboardType(.decimalPad)
-                DatePicker("Start Date", selection: $startDate, displayedComponents: .date)
-                DatePicker("Next Payment Date", selection: $nextPaymentDate, displayedComponents: .date)
+                Section(header: Text("Subscription Details")) {
+                    TextField("Subscription Name", text: $name)
+                    TextField("Monthly Cost", text: $monthlyCost)
+                        .keyboardType(.decimalPad)
+                    DatePicker("Start Date", selection: $startDate, displayedComponents: .date)
+                    
+                    Picker("Payment Frequency", selection: $selectedFrequency) {
+                        ForEach(PaymentFrequency.allCases) { frequency in
+                            Text(frequency.rawValue).tag(frequency)
+                        }
+                    }
+                }
             }
             .navigationTitle("Add Subscription")
             .toolbar {
@@ -31,7 +37,7 @@ struct AddSubscriptionView: View {
                                 name: name,
                                 monthlyCost: cost,
                                 startDate: startDate,
-                                nextPaymentDate: nextPaymentDate
+                                paymentFrequency: selectedFrequency
                             )
                             dismiss()
                         }

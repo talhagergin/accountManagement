@@ -171,6 +171,10 @@ struct ContentView: View {
                 .tabItem {
                     Label("Borçlar", systemImage: "creditcard.fill")
                 }
+            SubscriptionsView()
+                .tabItem{
+                    Label("Abonelikler", systemImage: "lasso.badge.sparkles")
+                }
         }
     }
 }

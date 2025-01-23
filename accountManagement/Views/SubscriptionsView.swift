@@ -10,46 +10,56 @@ import SwiftUI
 struct SubscriptionsView: View {
     @StateObject private var viewModel = SubscriptionViewModel()
     @State private var showingAddSubscription = false
-
+    
     var body: some View {
         NavigationView {
-            List {
-                Section(header: Text("Active Subscriptions")) {
+            VStack {
+                // Toplam tutarı gösteren kısım
+                Text("Total Monthly Cost: \(formattedCurrency(viewModel.getTotalMonthlyCost()))")
+                    .font(.headline)
+                    .padding()
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(Color(.systemGray6))
+                    .cornerRadius(8)
+                    .padding(.horizontal)
+                    
+                // Abonelik listesi
+                List {
                     ForEach(viewModel.getActiveSubscriptions()) { subscription in
-                        HStack {
-                            VStack(alignment: .leading) {
+                        VStack(alignment: .leading) {
+                            HStack {
                                 Text(subscription.name)
                                     .font(.headline)
-                                Text("Next Payment: \(formattedDate(subscription.nextPaymentDate))")
+                                Spacer()
+                                Text(formattedCurrency(subscription.monthlyCost))
                                     .font(.subheadline)
                                     .foregroundColor(.secondary)
                             }
-                            Spacer()
-                            Text("₺\(subscription.monthlyCost, specifier: "%.2f")")
-                                .font(.headline)
-                        }
-                    }
-                }
-                
-                Section(header: Text("Cancelled Subscriptions")) {
-                    ForEach(viewModel.getInactiveSubscriptions()) { subscription in
-                        HStack {
-                            VStack(alignment: .leading) {
-                                Text(subscription.name)
-                                    .font(.headline)
-                                if let cancellationDate = subscription.cancellationDate {
-                                    Text("Cancelled: \(formattedDate(cancellationDate))")
-                                        .font(.subheadline)
-                                        .foregroundColor(.secondary)
+                            Text("Next Payment: \(formattedDate(subscription.nextPaymentDate))")
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+                            Text("Payment Frequency: \(subscription.paymentFrequency.rawValue)")
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+                            
+                            // Abonelik iptal butonu
+                            Button(action: {
+                                withAnimation {
+                                    viewModel.cancelSubscription(subscription)
                                 }
+                            }) {
+                                Text("Cancel Subscription")
+                                    .font(.caption)
+                                    .foregroundColor(.red)
                             }
-                            Spacer()
-                            Text("₺\(subscription.monthlyCost, specifier: "%.2f")")
-                                .font(.headline)
-                                .strikethrough()
                         }
+                        .padding()
+                        .background(Color(.systemGray6))
+                        .cornerRadius(10)
+                        .shadow(radius: 2)
                     }
                 }
+                .listStyle(PlainListStyle())
             }
             .navigationTitle("Subscriptions")
             .toolbar {
@@ -64,10 +74,18 @@ struct SubscriptionsView: View {
             }
         }
     }
-
+    
+    private func formattedCurrency(_ value: Double) -> String {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .currency
+        formatter.currencyCode = Locale.current.currency?.identifier ?? "USD"
+        return formatter.string(from: NSNumber(value: value)) ?? "\(value)"
+    }
+    
     private func formattedDate(_ date: Date) -> String {
         let formatter = DateFormatter()
         formatter.dateStyle = .medium
         return formatter.string(from: date)
     }
 }
+
