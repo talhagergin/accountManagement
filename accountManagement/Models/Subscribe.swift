@@ -19,4 +19,5 @@ struct Subscription: Identifiable, Codable {
     var isActive: Bool = true
     var cancellationDate: Date?
     var notificationSentDate: Date?
+    var paymentCard: PaymentCard?
 }

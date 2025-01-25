@@ -14,16 +14,18 @@ class SubscriptionViewModel: ObservableObject {
         loadSubscriptions()
         requestNotificationAuthorization()
         scheduleNotificationCheck()
+        
     }
     
-    func addSubscription(name: String, monthlyCost: Double, startDate: Date, paymentFrequency: PaymentFrequency) {
+    func addSubscription(name: String, monthlyCost: Double, startDate: Date, paymentFrequency: PaymentFrequency, paymentCard: PaymentCard? = nil) {
         let nextPaymentDate = calculateNextPaymentDate(startDate: startDate, paymentFrequency: paymentFrequency)
         let newSubscription = Subscription(
             name: name,
             monthlyCost: monthlyCost,
             startDate: startDate,
             nextPaymentDate: nextPaymentDate,
-            paymentFrequency: paymentFrequency
+            paymentFrequency: paymentFrequency,
+            paymentCard: paymentCard
         )
         subscriptions.append(newSubscription)
         saveSubscriptions()
@@ -52,7 +54,7 @@ class SubscriptionViewModel: ObservableObject {
         }
     }
     
-    func updateSubscription(subscription: Subscription, name: String, monthlyCost: Double, startDate: Date, paymentFrequency: PaymentFrequency) {
+    func updateSubscription(subscription: Subscription, name: String, monthlyCost: Double, startDate: Date, paymentFrequency: PaymentFrequency, paymentCard: PaymentCard? = nil) {
         if let index = subscriptions.firstIndex(where: { $0.id == subscription.id }) {
             var updatedSubscription = subscription
             updatedSubscription.name = name
@@ -60,6 +62,7 @@ class SubscriptionViewModel: ObservableObject {
             updatedSubscription.startDate = startDate
             updatedSubscription.paymentFrequency = paymentFrequency
             updatedSubscription.nextPaymentDate = calculateNextPaymentDate(startDate: startDate, paymentFrequency: paymentFrequency)
+            updatedSubscription.paymentCard = paymentCard
             subscriptions[index] = updatedSubscription
             saveSubscriptions()
         }
@@ -131,17 +134,17 @@ class SubscriptionViewModel: ObservableObject {
     
     private func checkAndSendNotifications() {
         let now = Date()
-         
+        
         for (index, subscription) in subscriptions.enumerated() where subscription.isActive{
             // Check if next payment date is reached and no notification has been sent today
             if now >= subscription.nextPaymentDate && (subscription.notificationSentDate == nil || !Calendar.current.isDateInToday(subscription.notificationSentDate ?? now)){
                 sendNotification(for: subscription)
-                 
-                 var updatedSubscription = subscription
-                 updatedSubscription.notificationSentDate = now
-                 updatedSubscription.nextPaymentDate = calculateNextPaymentDate(startDate: subscription.startDate, paymentFrequency: subscription.paymentFrequency)
-                 self.subscriptions[index] = updatedSubscription
-                 self.saveSubscriptions()
+                
+                var updatedSubscription = subscription
+                updatedSubscription.notificationSentDate = now
+                updatedSubscription.nextPaymentDate = calculateNextPaymentDate(startDate: subscription.startDate, paymentFrequency: subscription.paymentFrequency)
+                self.subscriptions[index] = updatedSubscription
+                self.saveSubscriptions()
             }
         }
     }
@@ -155,8 +158,8 @@ class SubscriptionViewModel: ObservableObject {
         // Bildirim saati ayarlama
         var dateComponents = DateComponents()
         dateComponents.hour = 17
-        dateComponents.minute = 18
-
+        dateComponents.minute = 13
+        
         let trigger = UNCalendarNotificationTrigger(dateMatching: dateComponents, repeats: false)
         let request = UNNotificationRequest(identifier: UUID().uuidString, content: content, trigger: trigger)
         
@@ -168,5 +171,4 @@ class SubscriptionViewModel: ObservableObject {
             }
         }
     }
-    
 }

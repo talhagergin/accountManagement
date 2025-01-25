@@ -36,7 +36,7 @@ struct SubscriptionsView: View {
                                 .padding(.leading)
                         } else {
                             ForEach(viewModel.getActiveSubscriptions()) { subscription in
-                                SubscriptionRow(subscription: subscription, viewModel: viewModel, backgroundColor: Color(.systemGray6))
+                                SubscriptionRowView(subscription: subscription, viewModel: viewModel, backgroundColor: Color(.systemGray6))
                                     .onTapGesture {
                                         selectedSubscriptionForEdit = subscription
                                     }
@@ -59,7 +59,7 @@ struct SubscriptionsView: View {
                                 .padding(.leading)
                         } else {
                             ForEach(viewModel.getInactiveSubscriptions()) { subscription in
-                                SubscriptionRow(subscription: subscription, viewModel: viewModel, backgroundColor: Color(.systemGray5))
+                                SubscriptionRowView(subscription: subscription, viewModel: viewModel, backgroundColor: Color(.systemGray5))
                                     .swipeActions(edge: .trailing, allowsFullSwipe: false) {
                                         Button(role: .destructive) {
                                             subscriptionToDelete = subscription
@@ -109,48 +109,6 @@ struct SubscriptionsView: View {
                 )
             }
         }
-    }
-    
-    private func formattedCurrency(_ value: Double) -> String {
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .currency
-        formatter.currencyCode = Locale.current.currency?.identifier ?? "USD"
-        return formatter.string(from: NSNumber(value: value)) ?? "\(value)"
-    }
-    
-    private func formattedDate(_ date: Date) -> String {
-        let formatter = DateFormatter()
-        formatter.dateStyle = .medium
-        return formatter.string(from: date)
-    }
-}
-
-struct SubscriptionRow: View {
-    var subscription: Subscription
-   @ObservedObject var viewModel: SubscriptionViewModel
-    var backgroundColor: Color
-    
-    var body: some View {
-        VStack(alignment: .leading) {
-            HStack {
-                Text(subscription.name)
-                    .font(.headline)
-                Spacer()
-                Text(formattedCurrency(subscription.monthlyCost))
-                    .font(.subheadline)
-                    .foregroundColor(.blue)
-            }
-            Text("Next Payment: \(formattedDate(subscription.nextPaymentDate))")
-                .font(.subheadline)
-                .foregroundColor(.secondary)
-            Text("Payment Frequency: \(subscription.paymentFrequency.rawValue)")
-                .font(.subheadline)
-                .foregroundColor(.secondary)
-        }
-        .padding()
-        .background(backgroundColor)
-        .cornerRadius(10)
-        .shadow(radius: 2)
     }
     
     private func formattedCurrency(_ value: Double) -> String {

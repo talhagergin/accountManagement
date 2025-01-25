@@ -1,3 +1,5 @@
+// View/AddSubscriptionView.swift
+
 import SwiftUI
 
 struct AddSubscriptionView: View {
@@ -8,6 +10,11 @@ struct AddSubscriptionView: View {
     @State private var monthlyCost: String = ""
     @State private var startDate: Date = Date()
     @State private var selectedFrequency: PaymentFrequency = .monthly
+    @State private var selectedPaymentCard: PaymentCard?  // Yeni: Seçilen ödeme kartı
+    @State private var showingAddCardSheet = false
+    
+    @AppStorage("savedPaymentCards") private var savedPaymentCardsData: Data = Data()
+    @State private var savedPaymentCards: [PaymentCard] = []
     
     var subscription: Subscription?
     
@@ -15,62 +22,137 @@ struct AddSubscriptionView: View {
         subscription != nil
     }
     
-    init(viewModel: SubscriptionViewModel, subscription: Subscription? = nil) {
-            self.viewModel = viewModel
-            self.subscription = subscription
-            
-            if let subscription = subscription {
-                _name = State(initialValue: subscription.name)
-                _monthlyCost = State(initialValue: String(subscription.monthlyCost))
-                _startDate = State(initialValue: subscription.startDate)
-                _selectedFrequency = State(initialValue: subscription.paymentFrequency)
-            }
+    
+    func loadCards(){
+        if let decoded = try? JSONDecoder().decode([PaymentCard].self, from: savedPaymentCardsData) {
+            savedPaymentCards = decoded
         }
-
+        
+    }
+    
+    func saveCards(){
+        if let encoded = try? JSONEncoder().encode(savedPaymentCards) {
+            savedPaymentCardsData = encoded
+        }
+        
+    }
+    
+    init(viewModel: SubscriptionViewModel, subscription: Subscription? = nil) {
+        self.viewModel = viewModel
+        self.subscription = subscription
+        
+        if let subscription = subscription {
+            _name = State(initialValue: subscription.name)
+            _monthlyCost = State(initialValue: String(subscription.monthlyCost))
+            _startDate = State(initialValue: subscription.startDate)
+            _selectedFrequency = State(initialValue: subscription.paymentFrequency)
+            _selectedPaymentCard = State(initialValue: subscription.paymentCard )
+            
+        }
+        loadCards()
+    }
+    
+      private var isFormValid: Bool {
+            !name.isEmpty && !monthlyCost.isEmpty && Double(monthlyCost) != nil
+        }
+    
     var body: some View {
-        NavigationView {
+        NavigationStack {
             Form {
-                Section(header: Text("Subscription Details")) {
-                    TextField("Subscription Name", text: $name)
-                    TextField("Monthly Cost", text: $monthlyCost)
-                        .keyboardType(.decimalPad)
-                    DatePicker("Start Date", selection: $startDate, displayedComponents: .date)
+                Section(header: Text("Abonelik Detayları")) {
+                    HStack {
+                        Image(systemName: "tag.fill")
+                            .foregroundColor(.gray)
+                        TextField("Abonelik Adı", text: $name)
+                    }
                     
-                    Picker("Payment Frequency", selection: $selectedFrequency) {
-                        ForEach(PaymentFrequency.allCases) { frequency in
-                            Text(frequency.rawValue).tag(frequency)
+                    HStack {
+                        Image(systemName: "creditcard.fill")
+                            .foregroundColor(.gray)
+                        TextField("Aylık Ücret", text: $monthlyCost)
+                            .keyboardType(.decimalPad)
+                    }
+                    
+                    HStack {
+                        Image(systemName: "calendar")
+                            .foregroundColor(.gray)
+                        DatePicker("Başlangıç Tarihi", selection: $startDate, displayedComponents: .date)
+                    }
+                    
+                    HStack {
+                        Image(systemName: "arrow.triangle.2.circlepath")
+                            .foregroundColor(.gray)
+                        Picker("Ödeme Sıklığı", selection: $selectedFrequency) {
+                            ForEach(PaymentFrequency.allCases) { frequency in
+                                Text(frequency.rawValue).tag(frequency)
+                            }
                         }
                     }
+                    
+                    HStack {
+                        Image(systemName: "creditcard")
+                            .foregroundColor(.gray)
+                        Picker("Ödeme Kartı", selection: $selectedPaymentCard) {
+                            Text("Seçiniz").tag(nil as PaymentCard?)
+                            ForEach(savedPaymentCards) { card in
+                                Text("\(card.name) - \(card.last4Digits)").tag(card as PaymentCard?)
+                                
+                            }
+                        }
+                        
+                    }
+                    Button("Yeni Kart Ekle") {
+                        showingAddCardSheet = true
+                    }
                 }
+                
+                Button(action: {
+                    if let cost = Double(monthlyCost) {
+                        if isEditing, let subscription = subscription {
+                            viewModel.updateSubscription(
+                                subscription: subscription,
+                                name: name,
+                                monthlyCost: cost,
+                                startDate: startDate,
+                                paymentFrequency: selectedFrequency,
+                                paymentCard: selectedPaymentCard // Yeni: Ödeme kartı
+                            )
+                        } else {
+                            viewModel.addSubscription(
+                                name: name,
+                                monthlyCost: cost,
+                                startDate: startDate,
+                                paymentFrequency: selectedFrequency,
+                                paymentCard: selectedPaymentCard// Yeni: Ödeme kartı
+                            )
+                        }
+                        dismiss()
+                    }
+                }, label: {
+                    HStack {
+                        Spacer()
+                        Text(isEditing ? "Güncelle" : "Kaydet")
+                            .font(.headline)
+                            .foregroundColor(.white)
+                        Spacer()
+                    }
+                    .padding(.vertical, 10)
+                    .background(Color.blue)
+                    .cornerRadius(8)
+                })
+                 .disabled(!isFormValid) // Butonun aktifliği kontrol ediliyor
             }
-            .navigationTitle(isEditing ? "Edit Subscription" : "Add Subscription")
-            .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Cancel") { dismiss() }
+            .navigationTitle(isEditing ? "Aboneliği Düzenle" : "Abonelik Ekle")
+            .navigationBarItems(
+                leading: Button("İptal") {
+                    dismiss()
                 }
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button(isEditing ? "Update" : "Save") {
-                        if let cost = Double(monthlyCost) {
-                            if isEditing, let subscription = subscription {
-                                 viewModel.updateSubscription(
-                                    subscription: subscription,
-                                    name: name,
-                                    monthlyCost: cost,
-                                    startDate: startDate,
-                                    paymentFrequency: selectedFrequency
-                                 )
-                             } else {
-                                    viewModel.addSubscription(
-                                    name: name,
-                                    monthlyCost: cost,
-                                    startDate: startDate,
-                                    paymentFrequency: selectedFrequency
-                                    )
-                                }
-                            dismiss()
-                        }
-                    }
-                }
+            )
+            .sheet(isPresented: $showingAddCardSheet, content: {
+                AddPaymentCardView(cards: $savedPaymentCards, saveAction: saveCards)
+            })
+            .onAppear{
+                loadCards()
             }
         }
     }
