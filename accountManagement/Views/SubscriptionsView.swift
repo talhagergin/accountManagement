@@ -1,3 +1,5 @@
+// View/SubscriptionsView.swift
+
 import SwiftUI
 
 struct SubscriptionsView: View {
@@ -38,6 +40,14 @@ struct SubscriptionsView: View {
                                     .onTapGesture {
                                         selectedSubscriptionForEdit = subscription
                                     }
+                                    .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                                        Button(role: .destructive) {
+                                            viewModel.cancelSubscription(subscription)
+                                        } label: {
+                                            Label("İptal Et", systemImage: "xmark.circle")
+                                        }
+                                    }
+                                    
                             }
                         }
                     }
@@ -117,7 +127,7 @@ struct SubscriptionsView: View {
 
 struct SubscriptionRow: View {
     var subscription: Subscription
-    @ObservedObject var viewModel: SubscriptionViewModel
+   @ObservedObject var viewModel: SubscriptionViewModel
     var backgroundColor: Color
     
     var body: some View {
@@ -136,22 +146,6 @@ struct SubscriptionRow: View {
             Text("Payment Frequency: \(subscription.paymentFrequency.rawValue)")
                 .font(.subheadline)
                 .foregroundColor(.secondary)
-            
-            if subscription.isActive {
-                Button(action: {
-                    withAnimation {
-                        viewModel.cancelSubscription(subscription)
-                    }
-                }) {
-                    Text("Cancel Subscription")
-                        .font(.caption)
-                        .foregroundColor(.red)
-                }
-            } else {
-                Text("Cancelled on: \(formattedDate(subscription.cancellationDate ?? Date()))")
-                    .font(.caption)
-                    .foregroundColor(.gray)
-            }
         }
         .padding()
         .background(backgroundColor)

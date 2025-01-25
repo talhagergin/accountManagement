@@ -1,5 +1,8 @@
+// ViewModel/SubscriptionViewModel.swift
+
 import Foundation
 import SwiftUI
+import UserNotifications
 
 class SubscriptionViewModel: ObservableObject {
     @Published var subscriptions: [Subscription] = []
@@ -9,6 +12,8 @@ class SubscriptionViewModel: ObservableObject {
     
     init() {
         loadSubscriptions()
+        requestNotificationAuthorization()
+        scheduleNotificationCheck()
     }
     
     func addSubscription(name: String, monthlyCost: Double, startDate: Date, paymentFrequency: PaymentFrequency) {
@@ -22,6 +27,7 @@ class SubscriptionViewModel: ObservableObject {
         )
         subscriptions.append(newSubscription)
         saveSubscriptions()
+        checkAndSendNotifications()
     }
     
     func cancelSubscription(_ subscription: Subscription) {
@@ -34,33 +40,33 @@ class SubscriptionViewModel: ObservableObject {
         }
     }
     
-     func reactivateSubscription(_ subscription: Subscription) {
-          if let index = subscriptions.firstIndex(where: { $0.id == subscription.id }) {
-              var updatedSubscription = subscription
-              updatedSubscription.isActive = true
-              updatedSubscription.cancellationDate = nil
-               updatedSubscription.nextPaymentDate = calculateNextPaymentDate(startDate: updatedSubscription.startDate, paymentFrequency: updatedSubscription.paymentFrequency)
+    func reactivateSubscription(_ subscription: Subscription) {
+        if let index = subscriptions.firstIndex(where: { $0.id == subscription.id }) {
+            var updatedSubscription = subscription
+            updatedSubscription.isActive = true
+            updatedSubscription.cancellationDate = nil
+            updatedSubscription.nextPaymentDate = calculateNextPaymentDate(startDate: updatedSubscription.startDate, paymentFrequency: updatedSubscription.paymentFrequency)
 
-              subscriptions[index] = updatedSubscription
-              saveSubscriptions()
-          }
-      }
+            subscriptions[index] = updatedSubscription
+            saveSubscriptions()
+        }
+    }
     
     func updateSubscription(subscription: Subscription, name: String, monthlyCost: Double, startDate: Date, paymentFrequency: PaymentFrequency) {
-       if let index = subscriptions.firstIndex(where: { $0.id == subscription.id }) {
-           var updatedSubscription = subscription
-           updatedSubscription.name = name
-           updatedSubscription.monthlyCost = monthlyCost
-           updatedSubscription.startDate = startDate
-           updatedSubscription.paymentFrequency = paymentFrequency
-           updatedSubscription.nextPaymentDate = calculateNextPaymentDate(startDate: startDate, paymentFrequency: paymentFrequency)
-           subscriptions[index] = updatedSubscription
-           saveSubscriptions()
-       }
-   }
+        if let index = subscriptions.firstIndex(where: { $0.id == subscription.id }) {
+            var updatedSubscription = subscription
+            updatedSubscription.name = name
+            updatedSubscription.monthlyCost = monthlyCost
+            updatedSubscription.startDate = startDate
+            updatedSubscription.paymentFrequency = paymentFrequency
+            updatedSubscription.nextPaymentDate = calculateNextPaymentDate(startDate: startDate, paymentFrequency: paymentFrequency)
+            subscriptions[index] = updatedSubscription
+            saveSubscriptions()
+        }
+    }
     
     func deleteSubscription(_ subscription: Subscription){
-      subscriptions.removeAll(where: {$0.id == subscription.id})
+        subscriptions.removeAll(where: {$0.id == subscription.id})
         saveSubscriptions()
     }
     
@@ -104,4 +110,63 @@ class SubscriptionViewModel: ObservableObject {
             subscriptions = decoded
         }
     }
+    
+    // MARK: - Notification Handling
+    
+    private func requestNotificationAuthorization() {
+        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .badge, .sound]) { granted, error in
+            if granted {
+                print("Notification authorization granted.")
+            } else if let error = error {
+                print("Notification authorization error: \(error.localizedDescription)")
+            }
+        }
+    }
+    
+    private func scheduleNotificationCheck() {
+        Timer.scheduledTimer(withTimeInterval: 60, repeats: true) { [weak self] _ in
+            self?.checkAndSendNotifications()
+        }
+    }
+    
+    private func checkAndSendNotifications() {
+        let now = Date()
+         
+        for (index, subscription) in subscriptions.enumerated() where subscription.isActive{
+            // Check if next payment date is reached and no notification has been sent today
+            if now >= subscription.nextPaymentDate && (subscription.notificationSentDate == nil || !Calendar.current.isDateInToday(subscription.notificationSentDate ?? now)){
+                sendNotification(for: subscription)
+                 
+                 var updatedSubscription = subscription
+                 updatedSubscription.notificationSentDate = now
+                 updatedSubscription.nextPaymentDate = calculateNextPaymentDate(startDate: subscription.startDate, paymentFrequency: subscription.paymentFrequency)
+                 self.subscriptions[index] = updatedSubscription
+                 self.saveSubscriptions()
+            }
+        }
+    }
+    
+    private func sendNotification(for subscription: Subscription) {
+        let content = UNMutableNotificationContent()
+        content.title = "Abonelik Ödeme Hatırlatması"
+        content.body = "\(subscription.name) aboneliğinizin ödeme tarihi geldi."
+        content.sound = .default
+        
+        // Bildirim saati ayarlama
+        var dateComponents = DateComponents()
+        dateComponents.hour = 17
+        dateComponents.minute = 18
+
+        let trigger = UNCalendarNotificationTrigger(dateMatching: dateComponents, repeats: false)
+        let request = UNNotificationRequest(identifier: UUID().uuidString, content: content, trigger: trigger)
+        
+        UNUserNotificationCenter.current().add(request) { error in
+            if let error = error {
+                print("Notification error: \(error.localizedDescription)")
+            } else {
+                print("Notification sent for \(subscription.name)")
+            }
+        }
+    }
+    
 }
