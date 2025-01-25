@@ -41,10 +41,6 @@ class Transaction {
     }
 }
 
-enum TransactionType: String, Codable {
-    case income = "Gelir"
-    case expense = "Gider"
-}
 
 enum TransactionCategory: String, Codable, CaseIterable {
     case food = "Yiyecek"

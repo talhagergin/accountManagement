@@ -4,6 +4,7 @@ import Charts
 struct TransactionAnalyticsView: View {
     @State private var selectedTimeFrame: TimeFrame = .daily
     let viewModel: TransactionViewModel
+    @StateObject private var subscriptionViewModel = SubscriptionViewModel()
     
     enum TimeFrame {
         case daily, weekly, monthly
@@ -21,7 +22,6 @@ struct TransactionAnalyticsView: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 20) {
-                    // Zaman Aralığı Seçici
                     Picker("Zaman Aralığı", selection: $selectedTimeFrame) {
                         Text("Günlük").tag(TimeFrame.daily)
                         Text("Haftalık").tag(TimeFrame.weekly)
@@ -83,11 +83,64 @@ struct TransactionAnalyticsView: View {
                         .cornerRadius(10)
                         .padding(.horizontal)
                     }
+                    
+                    // Abonelikler Özeti
+                    VStack(alignment: .leading, spacing: 10) {
+                        Text("Abonelikler")
+                            .font(.headline)
+                            .padding(.horizontal)
+                        
+                        VStack(alignment: .leading, spacing: 15) {
+                            HStack {
+                                Text("Toplam Aylık Abonelik Maliyeti:")
+                                Spacer()
+                                Text(formattedCurrency(subscriptionViewModel.getTotalMonthlyCost()))
+                                    .bold()
+                                    .foregroundColor(.green)
+                            }
+                            
+                            Divider()
+                            
+                            Text("Aktif Abonelikler Listesi:")
+                                .font(.subheadline)
+                            
+                            ForEach(subscriptionViewModel.getActiveSubscriptions()) { subscription in
+                                HStack {
+                                    VStack(alignment: .leading) {
+                                        Text(subscription.name)
+                                            .font(.subheadline)
+                                        Text("Aylık Maliyet: \(formattedCurrency(subscription.monthlyCost))")
+                                            .font(.caption)
+                                            .foregroundColor(.gray)
+                                    }
+                                    Spacer()
+                                        Text(subscription.paymentFrequency.rawValue)
+                                          .font(.caption)
+                                           .padding(5)
+                                           .background(Color.blue.opacity(0.2))
+                                           .cornerRadius(5)
+                                }
+                                .padding(.vertical, 5)
+                            }
+                        }
+                        .padding()
+                        .background(Color.gray.opacity(0.1))
+                        .cornerRadius(10)
+                        .padding(.horizontal)
+                    }
+                    
+                    
                 }
                 .padding(.bottom)
             }
             .navigationTitle("Analiz")
         }
+    }
+    private func formattedCurrency(_ value: Double) -> String {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .currency
+        formatter.currencyCode = Locale.current.currency?.identifier ?? "USD"
+        return formatter.string(from: NSNumber(value: value)) ?? "\(value)"
     }
 }
 

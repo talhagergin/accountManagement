@@ -3,13 +3,15 @@ import SwiftUI
 struct SubscriptionsView: View {
     @StateObject private var viewModel = SubscriptionViewModel()
     @State private var showingAddSubscription = false
+    @State private var selectedSubscriptionForEdit: Subscription?
+    @State private var showingDeleteAlert = false
+    @State private var subscriptionToDelete: Subscription?
     
     var body: some View {
         NavigationView {
             VStack {
-                // Toplam tutarı gösteren kısım
                 HStack {
-                    Text("Total Monthly Cost:")
+                    Text("Toplam Ücret:")
                         .font(.headline)
                         .foregroundColor(.primary)
                     Spacer()
@@ -24,29 +26,45 @@ struct SubscriptionsView: View {
                 .cornerRadius(8)
                 .padding(.horizontal)
                 
-                ScrollView {
-                    // Aktif abonelikler listesi
-                    Section(header: Text("Active Subscriptions").font(.headline).padding(.leading)) {
+                List {
+                    Section(header: Text("Aktif Abonelikler").font(.headline).padding(.leading)) {
                         if viewModel.getActiveSubscriptions().isEmpty {
-                            Text("No active subscriptions.")
+                            Text("Aktif aboneliğiniz bulunmamaktadır.")
                                 .foregroundColor(.gray)
                                 .padding(.leading)
                         } else {
                             ForEach(viewModel.getActiveSubscriptions()) { subscription in
                                 SubscriptionRow(subscription: subscription, viewModel: viewModel, backgroundColor: Color(.systemGray6))
+                                    .onTapGesture {
+                                        selectedSubscriptionForEdit = subscription
+                                    }
                             }
                         }
                     }
                     
-                    // İptal Edilmiş Abonelikler Listesi
-                    Section(header: Text("Cancelled Subscriptions").font(.headline).padding(.leading)) {
+                    Section(header: Text("İptal Edilen Abonelikler").font(.headline).padding(.leading)) {
                         if viewModel.getInactiveSubscriptions().isEmpty {
-                            Text("No cancelled subscriptions.")
+                            Text("İptal edilen aboneliğiniz bulunmamaktadır.")
                                 .foregroundColor(.gray)
                                 .padding(.leading)
                         } else {
                             ForEach(viewModel.getInactiveSubscriptions()) { subscription in
                                 SubscriptionRow(subscription: subscription, viewModel: viewModel, backgroundColor: Color(.systemGray5))
+                                    .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                                        Button(role: .destructive) {
+                                            subscriptionToDelete = subscription
+                                            showingDeleteAlert = true
+                                        } label: {
+                                            Label("Sil", systemImage: "trash")
+                                        }
+                                    }
+                                    .swipeActions(edge: .leading, allowsFullSwipe: false) {
+                                        Button {
+                                            viewModel.reactivateSubscription(subscription)
+                                        } label: {
+                                            Label("Aktif Et", systemImage: "arrow.clockwise")
+                                        }
+                                    }
                             }
                         }
                     }
@@ -63,6 +81,22 @@ struct SubscriptionsView: View {
             }
             .sheet(isPresented: $showingAddSubscription) {
                 AddSubscriptionView(viewModel: viewModel)
+            }
+            .sheet(item: $selectedSubscriptionForEdit) { subscription in
+                AddSubscriptionView(viewModel: viewModel, subscription: subscription)
+            }
+            .alert(isPresented: $showingDeleteAlert) {
+                Alert(
+                    title: Text("Delete Subscription"),
+                    message: Text("Are you sure you want to delete this subscription?"),
+                    primaryButton: .destructive(Text("Delete")) {
+                        if let subscription = subscriptionToDelete {
+                            viewModel.deleteSubscription(subscription)
+                        }
+                        subscriptionToDelete = nil
+                    },
+                    secondaryButton: .cancel()
+                )
             }
         }
     }

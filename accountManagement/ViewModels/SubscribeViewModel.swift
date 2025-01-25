@@ -34,6 +34,36 @@ class SubscriptionViewModel: ObservableObject {
         }
     }
     
+     func reactivateSubscription(_ subscription: Subscription) {
+          if let index = subscriptions.firstIndex(where: { $0.id == subscription.id }) {
+              var updatedSubscription = subscription
+              updatedSubscription.isActive = true
+              updatedSubscription.cancellationDate = nil
+               updatedSubscription.nextPaymentDate = calculateNextPaymentDate(startDate: updatedSubscription.startDate, paymentFrequency: updatedSubscription.paymentFrequency)
+
+              subscriptions[index] = updatedSubscription
+              saveSubscriptions()
+          }
+      }
+    
+    func updateSubscription(subscription: Subscription, name: String, monthlyCost: Double, startDate: Date, paymentFrequency: PaymentFrequency) {
+       if let index = subscriptions.firstIndex(where: { $0.id == subscription.id }) {
+           var updatedSubscription = subscription
+           updatedSubscription.name = name
+           updatedSubscription.monthlyCost = monthlyCost
+           updatedSubscription.startDate = startDate
+           updatedSubscription.paymentFrequency = paymentFrequency
+           updatedSubscription.nextPaymentDate = calculateNextPaymentDate(startDate: startDate, paymentFrequency: paymentFrequency)
+           subscriptions[index] = updatedSubscription
+           saveSubscriptions()
+       }
+   }
+    
+    func deleteSubscription(_ subscription: Subscription){
+      subscriptions.removeAll(where: {$0.id == subscription.id})
+        saveSubscriptions()
+    }
+    
     func getActiveSubscriptions() -> [Subscription] {
         return subscriptions.filter { $0.isActive }
     }
