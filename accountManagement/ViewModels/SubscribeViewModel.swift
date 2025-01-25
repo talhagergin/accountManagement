@@ -157,8 +157,8 @@ class SubscriptionViewModel: ObservableObject {
         
         // Bildirim saati ayarlama
         var dateComponents = DateComponents()
-        dateComponents.hour = 17
-        dateComponents.minute = 13
+        dateComponents.hour = 10
+        dateComponents.minute = 30
         
         let trigger = UNCalendarNotificationTrigger(dateMatching: dateComponents, repeats: false)
         let request = UNNotificationRequest(identifier: UUID().uuidString, content: content, trigger: trigger)

@@ -81,7 +81,7 @@ struct SubscriptionsView: View {
                 }
                 .listStyle(PlainListStyle())
             }
-            .navigationTitle("Subscriptions")
+            .navigationTitle("Abonelikler")
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button(action: { showingAddSubscription.toggle() }) {
@@ -97,9 +97,9 @@ struct SubscriptionsView: View {
             }
             .alert(isPresented: $showingDeleteAlert) {
                 Alert(
-                    title: Text("Delete Subscription"),
-                    message: Text("Are you sure you want to delete this subscription?"),
-                    primaryButton: .destructive(Text("Delete")) {
+                    title: Text("Aboneliği sil"),
+                    message: Text("Aboneliğinizi silmek istediğinize emin misiniz?"),
+                    primaryButton: .destructive(Text("Sil")) {
                         if let subscription = subscriptionToDelete {
                             viewModel.deleteSubscription(subscription)
                         }

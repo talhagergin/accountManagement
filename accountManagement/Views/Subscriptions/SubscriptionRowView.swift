@@ -17,10 +17,10 @@ struct SubscriptionRowView: View {
                     .font(.subheadline)
                     .foregroundColor(.blue)
             }
-            Text("Next Payment: \(formattedDate(subscription.nextPaymentDate))")
+            Text("Sonraki Ödeme Tarihi: \(formattedDate(subscription.nextPaymentDate))")
                 .font(.subheadline)
                 .foregroundColor(.secondary)
-            Text("Payment Frequency: \(subscription.paymentFrequency.rawValue)")
+            Text("Ödeme Sıklığı: \(subscription.paymentFrequency.rawValue)")
                 .font(.subheadline)
                 .foregroundColor(.secondary)
             if let paymentCard = subscription.paymentCard {

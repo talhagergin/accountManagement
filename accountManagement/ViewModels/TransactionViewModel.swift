@@ -12,6 +12,7 @@ class TransactionViewModel: ObservableObject {
     private let monthFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateFormat = "MMMM yyyy"
+        formatter.locale = Locale.current
         return formatter
     }()
 
@@ -75,7 +76,6 @@ class TransactionViewModel: ObservableObject {
             let descriptor = FetchDescriptor<Transaction>(sortBy: [SortDescriptor(\.date, order: .reverse)])
             transactions = try modelContext.fetch(descriptor)
 
-            // İlk yüklemede mevcut ayı seç
             if let currentMonth = Calendar.current.date(from: Calendar.current.dateComponents([.year, .month], from: Date())) {
                 selectedMonth = currentMonth
             }
@@ -91,8 +91,8 @@ class TransactionViewModel: ObservableObject {
 
         do {
             try modelContext.save()
-            fetchTransactions() // Verileri yeniden yükle
-            updateDailyNotificationContent() // Bildirimi güncelle
+            fetchTransactions() // fetch data
+            updateDailyNotificationContent() // Update notifications
         } catch {
             print("Failed to save transaction: \(error)")
         }
