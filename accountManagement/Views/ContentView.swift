@@ -175,8 +175,10 @@ struct ContentView: View {
                 .tabItem{
                     Label("Abonelikler", systemImage: "lasso.badge.sparkles")
                 }
+            ReportView(modelContext: modelContext)
+                .tabItem {
+                    Label("Rapor", systemImage: "doc.text.fill")
+                }
         }
     }
 }
-
-
