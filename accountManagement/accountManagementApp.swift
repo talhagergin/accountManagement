@@ -27,8 +27,8 @@ struct AccountManagementApp: App {
     
     var body: some Scene {
         WindowGroup {
-            ContentView(viewModel: TransactionViewModel(modelContext: container.mainContext))
+            PasswordView()
+                .modelContainer(container)
         }
-        .modelContainer(container)
     }
 }

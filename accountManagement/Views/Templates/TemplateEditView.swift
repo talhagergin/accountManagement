@@ -1,5 +1,3 @@
-// View/TemplateEditView.swift
-
 import SwiftUI
 
 struct TemplateEditView: View {

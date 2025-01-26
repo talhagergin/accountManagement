@@ -16,7 +16,6 @@ struct DebtsView: View {
     var body: some View {
         NavigationView {
             VStack {
-                // Toplam borç kartı
                 VStack {
                     Text("Toplam Borç")
                         .font(.headline)
@@ -107,7 +106,6 @@ struct PersonDebtsView: View {
     
     var body: some View {
         VStack {
-            // Toplam borç gösterimi
             VStack {
                 Text("Toplam Borç")
                     .font(.headline)

@@ -1,5 +1,3 @@
-// Model/ExpenseTemplate.swift
-
 import Foundation
 
 enum TransactionType: String, Codable, CaseIterable {

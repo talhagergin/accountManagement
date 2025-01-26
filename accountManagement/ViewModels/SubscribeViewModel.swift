@@ -1,5 +1,3 @@
-// ViewModel/SubscriptionViewModel.swift
-
 import Foundation
 import SwiftUI
 import UserNotifications
@@ -155,7 +153,7 @@ class SubscriptionViewModel: ObservableObject {
         content.body = "\(subscription.name) aboneliğinizin ödeme tarihi geldi."
         content.sound = .default
         
-        // Bildirim saati ayarlama
+        // set notifaction hours
         var dateComponents = DateComponents()
         dateComponents.hour = 10
         dateComponents.minute = 30

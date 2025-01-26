@@ -1,5 +1,3 @@
-// View/SubscriptionsView.swift
-
 import SwiftUI
 
 struct SubscriptionsView: View {

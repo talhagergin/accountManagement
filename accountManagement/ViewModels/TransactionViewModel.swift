@@ -167,7 +167,6 @@ class TransactionViewModel: ObservableObject {
         return categoryTotals.map { ($0.key, $0.value) }.sorted { $0.1 > $1.1 }
     }
 
-    // Yeni analiz fonksiyonları
 
     func getTotalInstallmentExpenses() -> Double {
         return transactions
@@ -219,7 +218,7 @@ class TransactionViewModel: ObservableObject {
 
         do {
             try modelContext.save()
-            fetchTransactions() // Verileri yeniden yükle
+            fetchTransactions() // fetch data
         } catch {
             print("Failed to update paid installments: \(error)")
         }
@@ -247,7 +246,7 @@ class TransactionViewModel: ObservableObject {
         let content = UNMutableNotificationContent()
         content.title = "Günlük İşlem Özeti"
 
-        // Trigger'ı her gün akşam 21:00 için ayarla
+        // set general notification datetime
         var dateComponents = DateComponents()
         dateComponents.hour = 21
         dateComponents.minute = 0
@@ -261,7 +260,6 @@ class TransactionViewModel: ObservableObject {
             trigger: trigger
         )
 
-        // Mevcut bildirimi kaldır ve yenisini ekle
         UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: ["dailyTransactionSummary"])
         UNUserNotificationCenter.current().add(request) { error in
             if let error = error {

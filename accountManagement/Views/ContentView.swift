@@ -10,12 +10,14 @@ struct ContentView: View {
     @State private var selectedTransaction: Transaction?
     @State private var isChartExpanded = false
     @State var viewModel: TransactionViewModel
+    @State private var showPasswordSettings = false
+    @State private var selectedTab = 0
     
     private let themeColor = Color(red: 255/255, green: 182/255, blue: 193/255) // Light pink
     private let darkThemeColor = Color(red: 219/255, green: 112/255, blue: 147/255) // Darker pink
     
     var body: some View {
-        TabView {
+        TabView(selection: $selectedTab) {
             NavigationStack {
                 VStack(spacing: 16) {
                     // Balance Card
@@ -162,23 +164,71 @@ struct ContentView: View {
                 .sheet(item: $selectedTransaction) { transaction in
                     InstallmentDetailsView(transaction: transaction, viewModel: viewModel)
                 }
+                .toolbar {
+                    ToolbarItem(placement: .navigationBarTrailing) {
+                        Button(action: { showPasswordSettings = true }) {
+                            Image(systemName: "gear")
+                        }
+                    }
+                }
             }
             .tabItem {
                 Label("Hesap", systemImage: "dollarsign.circle.fill")
             }
+            .tag(0)
             
             DebtsView()
                 .tabItem {
                     Label("Borçlar", systemImage: "creditcard.fill")
                 }
+                .tag(1)
             SubscriptionsView()
                 .tabItem{
                     Label("Abonelikler", systemImage: "lasso.badge.sparkles")
                 }
+                .tag(2)
             ReportView(modelContext: modelContext)
                 .tabItem {
                     Label("Rapor", systemImage: "doc.text.fill")
                 }
+                .tag(3)
+        }
+        .sheet(isPresented: $showPasswordSettings) {
+            NavigationView {
+                List {
+                    Section(header: Text("Güvenlik")) {
+                        if PasswordManager.shared.isPasswordEnabled() {
+                            Button(action: {
+                                // Change password
+                                showPasswordSettings = false
+                                NotificationCenter.default.post(name: Notification.Name("ShowChangePassword"), object: nil)
+                            }) {
+                                Label("Şifreyi Değiştir", systemImage: "key")
+                            }
+                            
+                            Button(action: {
+                                PasswordManager.shared.setPasswordEnabled(false)
+                                showPasswordSettings = false
+                            }) {
+                                Label("Şifre Korumasını Kaldır", systemImage: "lock.open")
+                                    .foregroundColor(.red)
+                            }
+                        } else {
+                            Button(action: {
+                                // Enable password
+                                showPasswordSettings = false
+                                NotificationCenter.default.post(name: Notification.Name("ShowEnablePassword"), object: nil)
+                            }) {
+                                Label("Şifre Korumasını Aktifleştir", systemImage: "lock")
+                            }
+                        }
+                    }
+                }
+                .navigationTitle("Ayarlar")
+                .navigationBarItems(trailing: Button("Kapat") {
+                    showPasswordSettings = false
+                })
+            }
         }
     }
 }
