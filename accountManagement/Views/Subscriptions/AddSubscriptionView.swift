@@ -10,7 +10,7 @@ struct AddSubscriptionView: View {
     @State private var monthlyCost: String = ""
     @State private var startDate: Date = Date()
     @State private var selectedFrequency: PaymentFrequency = .monthly
-    @State private var selectedPaymentCard: PaymentCard?  // Yeni: Seçilen ödeme kartı
+    @State private var selectedPaymentCard: PaymentCard?
     @State private var showingAddCardSheet = false
     
     @AppStorage("savedPaymentCards") private var savedPaymentCardsData: Data = Data()
@@ -115,7 +115,7 @@ struct AddSubscriptionView: View {
                                 monthlyCost: cost,
                                 startDate: startDate,
                                 paymentFrequency: selectedFrequency,
-                                paymentCard: selectedPaymentCard // Yeni: Ödeme kartı
+                                paymentCard: selectedPaymentCard
                             )
                         } else {
                             viewModel.addSubscription(
@@ -123,7 +123,7 @@ struct AddSubscriptionView: View {
                                 monthlyCost: cost,
                                 startDate: startDate,
                                 paymentFrequency: selectedFrequency,
-                                paymentCard: selectedPaymentCard// Yeni: Ödeme kartı
+                                paymentCard: selectedPaymentCard
                             )
                         }
                         dismiss()
@@ -140,7 +140,7 @@ struct AddSubscriptionView: View {
                     .background(Color.blue)
                     .cornerRadius(8)
                 })
-                 .disabled(!isFormValid) // Butonun aktifliği kontrol ediliyor
+                 .disabled(!isFormValid)
             }
             .navigationTitle(isEditing ? "Aboneliği Düzenle" : "Abonelik Ekle")
             .navigationBarItems(

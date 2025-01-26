@@ -16,10 +16,20 @@ struct AddDebtView: View {
             Form {
                 Section(header: Text("Borç Detayları")) {
                     HStack {
-                        Picker("Kişi", selection: $selectedPerson) {
-                            Text("Kişi Seçin").tag(nil as Person?)
+                        Menu {
+                            Button("Kişi Seçin") {
+                                selectedPerson = nil
+                            }
                             ForEach(personViewModel.people, id: \.self) { person in
-                                Text(person.name).tag(person as Person?)
+                                Button(person.name) {
+                                    selectedPerson = person
+                                }
+                            }
+                        } label: {
+                            HStack {
+                                Text(selectedPerson?.name ?? "Kişi Seçin")
+                                Spacer()
+                                Image(systemName: "chevron.down")
                             }
                         }
                         
