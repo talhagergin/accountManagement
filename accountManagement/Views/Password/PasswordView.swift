@@ -57,7 +57,7 @@ struct PasswordView: View {
                         Text("Hatalı şifre!")
                             .foregroundColor(.red)
                     }
-                    
+                    /*
                     if LAContext().canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: nil) {
                         Button(action: authenticateWithBiometrics) {
                             Image(systemName: LAContext().biometryType == .faceID ? "faceid" : "touchid")
@@ -66,6 +66,7 @@ struct PasswordView: View {
                         }
                         .padding(.top)
                     }
+                    */
                 }
             }
         }
