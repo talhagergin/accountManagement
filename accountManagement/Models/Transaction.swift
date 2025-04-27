@@ -3,6 +3,7 @@ import SwiftData
 
 @Model
 class Transaction {
+    var id = UUID()
     var amount: Double
     var date: Date
     var type: TransactionType
@@ -12,7 +13,7 @@ class Transaction {
     var installmentAmount: Double?
     var isInstallment: Bool
     var installmentPaymentDate: Date?
-    var paidInstallments: Int? = 0
+    var paidInstallments: Int = 0
     
     init(amount: Double, date: Date = Date(), type: TransactionType, category: TransactionCategory? = nil, note: String? = nil, installmentCount: Int? = nil, installmentPaymentDate: Date? = nil) {
         self.amount = amount
@@ -20,7 +21,7 @@ class Transaction {
         self.type = type
         self.category = category
         self.note = note
-        self.isInstallment = installmentCount != nil
+        self.isInstallment = installmentCount != nil && installmentCount! > 0
         self.installmentCount = installmentCount
         self.installmentPaymentDate = installmentPaymentDate
         self.paidInstallments = 0
@@ -36,8 +37,7 @@ class Transaction {
     }
     
     var remainingInstallments: Int {
-        guard let total = installmentCount, let paid = paidInstallments else { return 0 }
-        return total - paid
+        return (installmentCount ?? 0) - paidInstallments
     }
 }
 

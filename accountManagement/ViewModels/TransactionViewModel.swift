@@ -86,8 +86,16 @@ class TransactionViewModel: ObservableObject {
     }
 
     func addTransaction(amount: Double, date: Date, type: TransactionType, category: TransactionCategory? = nil, note: String? = nil, installmentCount: Int? = nil, installmentPaymentDate: Date? = nil) {
-        let transaction = Transaction(amount: amount, date: date, type: type, category: category, note: note, installmentCount: installmentCount, installmentPaymentDate: installmentPaymentDate)
-        modelContext.insert(transaction)
+        if let count = installmentCount {
+            for i in 0..<count {
+                let transactionDate = Calendar.current.date(byAdding: .month, value: i, to: date) ?? date
+                let transaction = Transaction(amount: amount, date: transactionDate, type: type, category: category, note: note, installmentCount: count, installmentPaymentDate: installmentPaymentDate)
+                modelContext.insert(transaction)
+            }
+        } else {
+            let transaction = Transaction(amount: amount, date: date, type: type, category: category, note: note)
+            modelContext.insert(transaction)
+        }
 
         do {
             try modelContext.save()
@@ -212,13 +220,17 @@ class TransactionViewModel: ObservableObject {
 
     func payInstallment(for transaction: Transaction) {
         guard transaction.isInstallment,
-              transaction.remainingInstallments > 0 else { return }
+              transaction.remainingInstallments > 0,
+              transaction.paidInstallments < transaction.installmentCount! else { return }
 
-        transaction.paidInstallments = (transaction.paidInstallments ?? 0) + 1
+        // Taksidi ödendi olarak işaretle
+        var updatedTransaction = transaction
+        updatedTransaction.paidInstallments += 1
 
         do {
+            // Güncellenmiş işlemi kaydet
             try modelContext.save()
-            fetchTransactions() // fetch data
+            fetchTransactions() // verileri güncelle
         } catch {
             print("Failed to update paid installments: \(error)")
         }
